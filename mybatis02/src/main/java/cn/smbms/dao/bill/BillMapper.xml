@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="cn.smbms.dao.bill.BillMapper">
+	<resultMap type="Bill" id="BillByProvider">
+		<result property="providerName" column="proName"/>
+		<result property="id" column="id"/>
+	</resultMap>
+	
+	<select id="findBillByProductName" resultMap="BillByProvider" parameterType="string">
+		SELECT b.billCode,b.productName,p.proName,b.totalPrice,b.isPayment,b.creationDate FROM `smbms_bill` b 
+		INNER JOIN `smbms_provider` p ON b.providerId=p.id
+		WHERE b.productName LIKE CONCAT('%',#{productName},'%')
+	</select>
+	
+	<select id="findBillByProviderId" resultMap="BillByProvider" parameterType="Integer">
+		SELECT b.billCode,b.productName,p.proName,b.totalPrice,b.isPayment,b.creationDate FROM `smbms_bill` b 
+		INNER JOIN `smbms_provider` p ON b.providerId=p.id
+		WHERE b.providerId=#{providerId} 
+	</select>
+	
+	<select id="findBillAndProviderName" resultMap="BillByProvider">
+		SELECT b.id,billCode,productName,providerId,p.proName,b.totalPrice,b.isPayment,b.creationDate 
+		FROM `smbms_bill` b,`smbms_provider` p
+		<where>
+			b.providerId=p.id 
+			<if test="productName!=null and productName!='' ">
+				and productName like CONCAT('%',#{productName},'%')
+			</if>
+			<if test="id!=null ">
+				and id=#{id}
+			</if>
+			<if test="isPayment!=null ">
+				and isPayment=#{isPayment}
+			</if>
+		</where>
+	</select>
+
+</mapper>

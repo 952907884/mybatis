@@ -1,0 +1,120 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="cn.smbms.dao.user.UserMapper">
+
+	<resultMap type="User" id="userList">
+		<result property="id" column="id"/>
+		<result property="userCode" column="userCode"/>
+		<result property="userName" column="userName"/>
+		<result property="phone" column="phone"/>
+		<result property="birthday" column="birthday"/>
+		<result property="gender" column="gender"/>
+		<result property="userRole" column="userRole"/>
+		<result property="userRoleName" column="roleName"/> 
+	</resultMap>
+	
+	<resultMap type="User" id="userRoleResult">
+		<id property="id" column="id"/>
+		<result property="userCode" column="userCode"/>
+		<result property="userName" column="userName"/>
+		<result property="userRole" column="userRole"/>
+		<!-- <association property="role" javaType="Role">
+			<id property="id" column="r_id"/>
+			<result property="roleCode" column="roleCode"/>
+			<result property="roleName" column="roleName"/>
+		</association> -->
+		<association property="role" javaType="Role" resultMap="roleResult"></association>
+	</resultMap>
+	
+	<resultMap type="Role" id="roleResult">
+		<id property="id" column="id"/>
+		<result property="roleCode" column="roleCode"/>
+		<result property="roleName" column="roleName"/> 
+	</resultMap>
+	
+	<resultMap type="User" id="userAddressResult">
+		<id property="id" column="id"/>
+		<result property="userCode" column="userCode"/>
+		<result property="userName" column="userName"/>
+		<collection property="addressList" ofType="Address">
+			<id property="id" column="a_id"/>
+			<result property="postCode" column="postCode"/>
+			<result property="tel" column="tel"/>
+			<result property="contact" column="contact"/>
+			<result property="addressDesc" column="addressDesc"/>
+		</collection>
+	</resultMap>
+
+		<!--查询用户表的记录数  -->
+	<select id="count" resultType="int">
+		SELECT COUNT(*) count FROM `smbms_user`
+	</select>
+	
+	
+	<!-- 查询所有的用户 -->
+	<select id="findAllUser" resultType="cn.smbms.entity.User">
+		SELECT * FROM `smbms_user`
+	</select>
+	
+	<!--根据用户名模糊查询  -->
+	<select id="findUserByUserName" resultType="User" parameterType="java.lang.String">
+		SELECT * FROM `smbms_user` where userName LIKE CONCAT('%',#{userName},'%')
+	</select>
+	
+	<!-- 多条件查询 -->
+	<select id="findUser" resultType="User" parameterType="User">
+		SELECT * FROM `smbms_user` where userName LIKE CONCAT('%',#{userName},'%') and userRole=#{userRole}
+	</select>
+	
+	<select id="findUserByMap" resultType="User" parameterType="Map">
+		SELECT * FROM `smbms_user` where userName LIKE CONCAT('%',#{uName},'%') and userRole=#{uRole}
+	</select>
+	
+	<!--使用resultMap映射结果  -->
+	<select id="findUserByRole" resultMap="userList" parameterType="User">
+		SELECT u.*,r.roleName FROM `smbms_user` u
+		INNER JOIN `smbms_role` r ON #{userRole}=r.id
+		WHERE u.userName LIKE CONCAT('%',#{userName},'%')
+	</select>
+	
+	<update id="updatePwd">
+		update `smbms_user` set userPassword=#{userPassword} where id=#{id}
+	</update>
+	
+	<select id="getUserListByRoleId" resultMap="userRoleResult" parameterType="Integer">
+		SELECT u.*,r.id AS r_id, r.roleCode,r.roleName FROM `smbms_user` u
+		INNER JOIN `smbms_role` r ON u.userRole = r.id
+		WHERE u.userRole=#{userRole}
+	</select>
+	
+	<select id="getAddressListByUserId" parameterType="Integer" resultMap="userAddressResult">
+		SELECT u.*,a.id AS a_id,a.contact,a.addressDesc,a.postCode,a.tel FROM `smbms_user` u
+		INNER JOIN `smbms_address` a ON u.id = a.userId 
+		WHERE u.id=#{id}
+	</select>
+	
+	<select id="getUserList" resultMap="userList">
+		SELECT u.*,r.roleName FROM `smbms_user` u, `smbms_role` r 
+		WHERE u.userRole=r.id
+		<if test="userRole!=null">
+		and #u.userRole=#{userRole}
+		</if>
+		<if test="userName!=null and userName!=''">
+		and u.userName LIKE CONCAT('%',#{userName},'%')
+		</if>
+	</select>	
+	
+	<select id="getUserByName" resultType="User">
+		select * from `smbms_user`
+		<where>
+			<if test="userName!=null and userName!='' ">
+				and userName like concat('%',#{userName},'%')
+			</if>
+			<if test="userRole!=null ">
+				and userRole=#{userRole}
+			</if>
+		</where>
+	</select>
+</mapper>
